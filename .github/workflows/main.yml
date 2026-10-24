@@ -1,0 +1,37 @@
+name: Build NootedGreen kext
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Intel macOS runner. If GitHub rejects this label, try: macos-15 or macos-14
+    runs-on: macos-15-intel
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          xcode-select -p
+          clang --version
+
+      - name: Build NootedGreen.kext
+        run: zsh build-nootedgreen.sh
+
+      - name: Verify binary
+        run: |
+          file build/NootedGreen.kext/Contents/MacOS/NootedGreen
+          cat build/NootedGreen.kext/Contents/Info.plist | head -40
+
+      - name: Zip kext
+        run: |
+          cd build
+          ditto -c -k --sequesterRsrc --keepParent NootedGreen.kext NootedGreen.kext.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NootedGreen-kext
+          path: build/NootedGreen.kext.zip
